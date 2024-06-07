@@ -1,19 +1,23 @@
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, request, send_file
 import cv2
 import numpy as np
-from tensorflow.keras.models import model_from_json
+from keras.models import model_from_json
+import os
+from io import BytesIO
+from PIL import Image
 
 app = Flask(__name__)
+port = int(os.environ.get("PORT", 5000))
 
 # Load Face Detection Model
-face_cascade_path = r"C:\Users\ss\OneDrive\Desktop\spoof\models\haarcascade_frontalface_default.xml"
+face_cascade_path = r"models/haarcascade_frontalface_default.xml"
 face_cascade = cv2.CascadeClassifier(face_cascade_path)
 if face_cascade.empty():
     print(f"Error loading face cascade from {face_cascade_path}")
 
 # Load Anti-Spoofing Model
-model_json_path = r'C:\Users\ss\OneDrive\Desktop\spoof\pro_antispoofing_model_mobilenet.json'
-model_weights_path = r'C:\Users\ss\OneDrive\Desktop\spoof\antispoofing_model.h5'
+model_json_path = r'antispoofing_models/antispoofing_model.json'
+model_weights_path = r'antispoofing_models/antispoofing_model.h5'
 
 with open(model_json_path, 'r') as json_file:
     loaded_model_json = json_file.read()
@@ -26,6 +30,11 @@ def detect_and_predict(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
+    if len(faces) == 0:
+        print("No faces detected.")
+    else:
+        print(f"Faces detected: {len(faces)}")
+
     for (x, y, w, h) in faces:
         face = frame[y - 5:y + h + 5, x - 5:x + w + 5]
         resized_face = cv2.resize(face, (160, 160))
@@ -37,6 +46,8 @@ def detect_and_predict(frame):
 
         label = 'real' if preds <= 0.5 else 'spoof'
         color = (0, 255, 0) if preds <= 0.5 else (0, 0, 255)
+
+        print(f"Label: {label}, Color: {color}")
 
         cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
         cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
@@ -77,6 +88,20 @@ def index():
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-# Removed the following block to avoid running the development server
-# if __name__ == "__main__":
-#     app.run(debug=True)
+@app.route('/process_frame', methods=['POST'])
+def process_frame():
+    if 'frame' not in request.files:
+        return "No frame found", 400
+
+    frame = request.files['frame'].read()
+    npimg = np.frombuffer(frame, np.uint8)
+    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+
+    processed_frame = detect_and_predict(img)
+    _, buffer = cv2.imencode('.jpg', processed_frame)
+    io_buf = BytesIO(buffer)
+
+    return send_file(io_buf, mimetype='image/jpeg')
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=port)
