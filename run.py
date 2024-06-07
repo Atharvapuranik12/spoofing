@@ -12,7 +12,7 @@ if face_cascade.empty():
 
 # Load Anti-Spoofing Model
 model_json_path = r'antispoofing_models/antispoofing_model.json'
-model_weights_path = r'antispoofing_model.h5'
+model_weights_path = r'antispoofing_models/antispoofing_model.h5'
 
 with open(model_json_path, 'r') as json_file:
     loaded_model_json = json_file.read()
