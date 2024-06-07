@@ -1,8 +1,13 @@
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, request, send_file
 import cv2
 import numpy as np
 from keras.models import model_from_json
+import os
+from io import BytesIO
+from PIL import Image
+
 app = Flask(__name__)
+port = int(os.environ.get("PORT", 5000))
 
 # Load Face Detection Model
 face_cascade_path = r"models/haarcascade_frontalface_default.xml"
@@ -72,9 +77,20 @@ def generate_frames():
 def index():
     return render_template('index.html')
 
-@app.route('/video_feed')
+@app.route('/video_feed', methods=['POST'])
 def video_feed():
+    if 'frame' not in request.files:
+        return "No frame found", 400
+
+    frame = request.files['frame'].read()
+    npimg = np.frombuffer(frame, np.uint8)
+    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+
+    processed_frame = detect_and_predict(img)
+    _, buffer = cv2.imencode('.jpg', processed_frame)
+    io_buf = BytesIO(buffer)
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # app.run(debug=True)
+    app.run(host='0.0.0.0', port=port)
