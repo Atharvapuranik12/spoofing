@@ -1,7 +1,6 @@
 from flask import Flask, render_template, Response
 import cv2
 import numpy as np
-from tensorflow.keras.models import model_from_json
 
 app = Flask(__name__)
 
@@ -12,7 +11,7 @@ if face_cascade.empty():
     print(f"Error loading face cascade from {face_cascade_path}")
 
 # Load Anti-Spoofing Model
-model_json_path = r'C:\Users\ss\OneDrive\Desktop\spoof\pro_antispoofing_model_mobilenet.json'
+model_json_path = r'C:\Users\ss\OneDrive\Desktop\spoof\antispoofing_model.json'
 model_weights_path = r'C:\Users\ss\OneDrive\Desktop\spoof\antispoofing_model.h5'
 
 with open(model_json_path, 'r') as json_file:
