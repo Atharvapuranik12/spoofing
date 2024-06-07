@@ -1,7 +1,7 @@
 from flask import Flask, render_template, Response
 import cv2
 import numpy as np
-
+from keras.models import model_from_json
 app = Flask(__name__)
 
 # Load Face Detection Model
