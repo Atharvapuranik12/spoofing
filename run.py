@@ -9,7 +9,8 @@ app = Flask(__name__)
 face_cascade_path = os.path.join('models', 'haarcascade_frontalface_default.xml')
 face_cascade = cv2.CascadeClassifier(face_cascade_path)
 if face_cascade.empty():
-    print(f"Error loading face cascade from {face_cascade_path}")
+    print(f"Error: Failed to load face cascade from {face_cascade_path}")
+    exit(1)
 
 def detect_and_predict(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
