@@ -2,6 +2,8 @@ from flask import Flask, render_template, Response
 import cv2
 import numpy as np
 import os
+from io import BytesIO
+from PIL import Image
 
 app = Flask(__name__)
 
@@ -61,10 +63,22 @@ def generate_frames():
 @app.route('/')
 def index():
     return render_template('index.html')
+    
 
-@app.route('/video_feed')
+@app.route('/video_feed', methods=['POST'])
 def video_feed():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    if 'frame' not in request.files:
+        return "No frame found", 400
+
+    frame = request.files['frame'].read()
+    npimg = np.frombuffer(frame, np.uint8)
+    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+
+    processed_frame = detect_and_predict(img)
+    _, buffer = cv2.imencode('.jpg', processed_frame)
+    io_buf = BytesIO(buffer)
+    return send_file(io_buf, mimetype='image/jpeg')
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=True)
