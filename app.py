@@ -1,9 +1,11 @@
 from flask import Flask, render_template, Response
+from flask_cors import CORS
 import cv2
 import numpy as np
 import os
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Load Face Detection Model
 face_cascade_path = os.path.join('models', 'haarcascade_frontalface_default.xml')
@@ -31,6 +33,7 @@ def detect_and_predict(frame):
         cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
     return frame
+
 def generate_frames():
     # Use a virtual camera device (e.g. /dev/video1)
     video_device = '/dev/video1'
@@ -59,6 +62,7 @@ def generate_frames():
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
     video.release()
+
 @app.route('/')
 def index():
     return render_template('index.html')
