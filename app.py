@@ -21,11 +21,11 @@ def detect_and_predict(frame):
 
         # Perform basic anti-spoofing heuristic
         if len(faces) > 1:  # Check for multiple faces
-            label = 'spoof'
+            label = 'poof'
             color = (0, 0, 255)
         else:  # Check for eye blink detection
             # Code for eye blink detection goes here
-            label = 'real'
+            label = 'eal'
             color = (0, 255, 0)
 
         cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
@@ -33,7 +33,8 @@ def detect_and_predict(frame):
     return frame
 
 def generate_frames():
-    video = cv2.VideoCapture(0)
+    # Use a virtual camera device (e.g. /dev/video1)
+    video = cv2.VideoCapture('/dev/video1')
     if not video.isOpened():
         print("Error: Could not open video source.")
         return
@@ -56,7 +57,6 @@ def generate_frames():
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
     video.release()
-    cv2.destroyAllWindows()
 
 @app.route('/')
 def index():
