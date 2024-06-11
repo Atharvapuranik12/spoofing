@@ -31,14 +31,16 @@ def detect_and_predict(frame):
         cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
     return frame
-
 def generate_frames():
     # Use a virtual camera device (e.g. /dev/video1)
-    video = cv2.VideoCapture('/dev/video1')
+    video_device = '/dev/video1'
+    print(f"Trying to open video device: {video_device}")
+    video = cv2.VideoCapture(video_device)
     if not video.isOpened():
-        print("Error: Could not open video source.")
+        print(f"Error: Could not open video source at {video_device}")
         return
 
+    print("Video source opened successfully!")
     while True:
         success, frame = video.read()
         if not success:
@@ -57,7 +59,6 @@ def generate_frames():
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
     video.release()
-
 @app.route('/')
 def index():
     return render_template('index.html')
