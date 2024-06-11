@@ -1,23 +1,19 @@
-from flask import Flask, render_template, Response, request, send_file
+from flask import Flask, render_template, Response
 import cv2
 import numpy as np
-from keras.models import model_from_json
-import os
-from io import BytesIO
-from PIL import Image
+from tensorflow.keras.models import model_from_json
 
 app = Flask(__name__)
-port = int(os.environ.get("PORT", 5000))
 
 # Load Face Detection Model
-face_cascade_path = r"models/haarcascade_frontalface_default.xml"
+face_cascade_path = r"C:\Users\ss\OneDrive\Desktop\spoof\models\haarcascade_frontalface_default.xml"
 face_cascade = cv2.CascadeClassifier(face_cascade_path)
 if face_cascade.empty():
     print(f"Error loading face cascade from {face_cascade_path}")
 
 # Load Anti-Spoofing Model
-model_json_path = r'models/antispoofing_model.json'
-model_weights_path = r'models/antispoofing_model.h5'
+model_json_path = r'C:\Users\ss\OneDrive\Desktop\spoof\pro_antispoofing_model_mobilenet.json'
+model_weights_path = r'C:\Users\ss\OneDrive\Desktop\spoof\antispoofing_model.h5'
 
 with open(model_json_path, 'r') as json_file:
     loaded_model_json = json_file.read()
@@ -77,20 +73,9 @@ def generate_frames():
 def index():
     return render_template('index.html')
 
-@app.route('/video_feed', methods=['POST'])
+@app.route('/video_feed')
 def video_feed():
-    if 'frame' not in request.files:
-        return "No frame found", 400
-
-    frame = request.files['frame'].read()
-    npimg = np.frombuffer(frame, np.uint8)
-    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
-
-    processed_frame = detect_and_predict(img)
-    _, buffer = cv2.imencode('.jpg', processed_frame)
-    io_buf = BytesIO(buffer)
-    return send_file(io_buf, mimetype='image/jpeg')
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
-    # app.run(debug=True)
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)
