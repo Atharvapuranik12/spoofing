@@ -1,11 +1,9 @@
 from flask import Flask, render_template, Response
-from flask_cors import CORS
 import cv2
 import numpy as np
 import os
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
 
 # Load Face Detection Model
 face_cascade_path = os.path.join('models', 'haarcascade_frontalface_default.xml')
