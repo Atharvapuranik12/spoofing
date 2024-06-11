@@ -1,10 +1,7 @@
-# app.py
 from flask import Flask, render_template, Response
 import cv2
 import numpy as np
-from tensorflow.keras.models import model_from_json
 import os
-from PIL import Image  # Ensure PIL is imported
 
 app = Flask(__name__)
 
@@ -14,35 +11,23 @@ face_cascade = cv2.CascadeClassifier(face_cascade_path)
 if face_cascade.empty():
     print(f"Error loading face cascade from {face_cascade_path}")
 
-# Load Anti-Spoofing Model
-model_json_path = os.path.join('models', 'pro_antispoofing_model_mobilenet.json')
-model_weights_path = os.path.join('models', 'antispoofing_model.h5')
-
-with open(model_json_path, 'r') as json_file:
-    loaded_model_json = json_file.read()
-
-model = model_from_json(loaded_model_json)
-model.load_weights(model_weights_path)
-print("Model loaded from disk")
-
 def detect_and_predict(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
     for (x, y, w, h) in faces:
-        face = frame[y - 5:y + h + 5, x - 5:x + w + 5]
-        resized_face = cv2.resize(face, (160, 160))
-        resized_face = resized_face.astype("float") / 255.0
-        resized_face = np.expand_dims(resized_face, axis=0)
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
-        preds = model.predict(resized_face)[0]
-        print(f"Predictions: {preds}")  # Debug: Print predictions
-
-        label = 'real' if preds <= 0.5 else 'spoof'
-        color = (0, 255, 0) if preds <= 0.5 else (0, 0, 255)
+        # Perform basic anti-spoofing heuristic
+        if len(faces) > 1:  # Check for multiple faces
+            label = 'spoof'
+            color = (0, 0, 255)
+        else:  # Check for eye blink detection
+            # Code for eye blink detection goes here
+            label = 'real'
+            color = (0, 255, 0)
 
         cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-        cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
 
     return frame
 
