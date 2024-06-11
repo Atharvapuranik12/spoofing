@@ -2,18 +2,19 @@ from flask import Flask, render_template, Response
 import cv2
 import numpy as np
 from tensorflow.keras.models import model_from_json
+import os
 
 app = Flask(__name__)
 
 # Load Face Detection Model
-face_cascade_path = r"C:\Users\ss\OneDrive\Desktop\spoof\models\haarcascade_frontalface_default.xml"
+face_cascade_path = os.path.join('models', 'haarcascade_frontalface_default.xml')
 face_cascade = cv2.CascadeClassifier(face_cascade_path)
 if face_cascade.empty():
     print(f"Error loading face cascade from {face_cascade_path}")
 
 # Load Anti-Spoofing Model
-model_json_path = r'C:\Users\ss\OneDrive\Desktop\spoof\pro_antispoofing_model_mobilenet.json'
-model_weights_path = r'C:\Users\ss\OneDrive\Desktop\spoof\antispoofing_model.h5'
+model_json_path = os.path.join('models', 'pro_antispoofing_model_mobilenet.json')
+model_weights_path = os.path.join('models', 'antispoofing_model.h5')
 
 with open(model_json_path, 'r') as json_file:
     loaded_model_json = json_file.read()
@@ -78,4 +79,4 @@ def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=True)
