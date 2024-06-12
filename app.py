@@ -33,8 +33,8 @@ def detect_and_predict(frame):
     return frame
 
 def generate_frames():
-    # Use a virtual camera device (e.g. /dev/video1)
-    video_device = '/dev/video1'
+    # Use the default camera device (typically 0)
+    video_device = 0
     print(f"Trying to open video device: {video_device}")
     video = cv2.VideoCapture(video_device)
     if not video.isOpened():
