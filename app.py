@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import cv2
 import numpy as np
-from tensorflow.keras.models import model_from_json
+from keras.models import model_from_json
 import base64
 
 app = Flask(__name__)
