@@ -3,34 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Face Anti-Spoofing</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-            font-family: Arial, sans-serif;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .container {
-            text-align: center;
-        }
-        video {
-            border: 5px solid #333;
-            border-radius: 10px;
-        }
-    </style>
+    <title>Real-time Anti-Spoofing</title>
 </head>
 <body>
-    <div class="container">
-        <h1>Real-Time Face Anti-Spoofing</h1>
-        <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Video feed not available">
-    </div>
+    <h1>Real-time Anti-Spoofing</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="capture">Capture and Predict</button>
+    <script>
+        const video = document.getElementById('video');
+        const captureButton = document.getElementById('capture');
+
+        // Get access to the camera
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+                video.srcObject = stream;
+                video.play();
+            });
+        }
+
+        captureButton.addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataURL = canvas.toDataURL('image/jpeg');
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: dataURL })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                data.forEach(result => {
+                    context.strokeStyle = result.label === 'real' ? 'green' : 'red';
+                    context.lineWidth = 2;
+                    context.strokeRect(result.bbox[0], result.bbox[1], result.bbox[2], result.bbox[3]);
+                    context.font = '18px Arial';
+                    context.fillStyle = result.label === 'real' ? 'green' : 'red';
+                    context.fillText(result.label, result.bbox[0], result.bbox[1] - 10);
+                });
+                const resultDataURL = canvas.toDataURL('image/jpeg');
+                document.getElementById('result').src = resultDataURL;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+    <img id="result" />
 </body>
 </html>
