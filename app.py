@@ -13,7 +13,7 @@ if face_cascade.empty():
     print(f"Error loading face cascade from {face_cascade_path}")
 
 # Load Anti-Spoofing Model
-model_json_path = r'models\antispoofing_model_mobilenet.json'
+model_json_path = r'models\antispoofing_model.json'
 model_weights_path = r'models\antispoofing_model.h5'
 
 with open(model_json_path, 'r') as json_file:
